@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CapMinds — Appointment Scheduler</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <div class="toast" id="toast" role="alert" aria-live="assertive" aria-atomic="true"></div>
+
+    <div class="confirm-overlay" id="confirm-overlay" role="dialog" aria-modal="true" aria-labelledby="confirm-title" hidden>
+        <div class="confirm-box">
+            <div class="confirm-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </div>
+            <h3 id="confirm-title">Delete Appointment</h3>
+            <p id="confirm-message">Are you sure you want to delete this appointment? This cannot be undone.</p>
+            <div class="confirm-actions">
+                <button class="btn-cancel" id="confirm-cancel">Cancel</button>
+                <button class="btn-danger" id="confirm-ok">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <header class="app-header" role="banner">
+        <div class="brand-container" id="brand-container">
+            <button class="hamburger-btn" id="btn-toggle-sidebar"
+                aria-label="Toggle navigation" aria-expanded="false" aria-controls="sidebar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" aria-hidden="true">
+                    <line x1="3" y1="12" x2="21" y2="12"/>
+                    <line x1="3" y1="6" x2="21" y2="6"/>
+                    <line x1="3" y1="18" x2="21" y2="18"/>
+                </svg>
+            </button>
+            <div class="logo-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"/>
+                </svg>
+            </div>
+            <span class="brand-name">CAPMINDS</span>
+        </div>
+
+        <div class="header-center">
+            <button class="btn-primary btn-book" id="btn-open-modal">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" aria-hidden="true">
+                    <line x1="12" y1="5" x2="12" y2="19"/>
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                <span>Book Appointment</span>
+            </button>
+        </div>
+
+        <div class="header-right" id="header-right" aria-hidden="true"></div>
+    </header>
+
+    <div class="main-layout">
+        <div class="sidebar-overlay" id="sidebar-overlay" role="presentation" tabindex="-1"></div>
+
+        <aside class="sidebar" id="sidebar" role="navigation" aria-label="Main navigation">
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active" data-view="calendar-view" aria-current="page">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" aria-hidden="true">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="16" y1="2" x2="16" y2="6"/>
+                        <line x1="8" y1="2" x2="8" y2="6"/>
+                        <line x1="3" y1="10" x2="21" y2="10"/>
+                    </svg>
+                    <span class="nav-label">Calendar</span>
+                </a>
+                <a href="#" class="nav-item" data-view="dashboard-view">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" aria-hidden="true">
+                        <rect x="3" y="3" width="7" height="7"/>
+                        <rect x="14" y="3" width="7" height="7"/>
+                        <rect x="14" y="14" width="7" height="7"/>
+                        <rect x="3" y="14" width="7" height="7"/>
+                    </svg>
+                    <span class="nav-label">Dashboard</span>
+                </a>
+            </nav>
+        </aside>
+
+        <main class="content-area" id="content-area" tabindex="-1">
+
+            <section id="calendar-view" class="view-section active" aria-label="Calendar view">
+                <div class="calendar-card">
+                    <div class="calendar-toolbar">
+                        <div class="toolbar-nav">
+                            <button class="btn-icon" id="cal-prev" aria-label="Previous month">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" aria-hidden="true">
+                                    <polyline points="15 18 9 12 15 6"/>
+                                </svg>
+                            </button>
+                            <div class="current-date-display" id="date-display-btn" aria-live="polite" aria-atomic="true" style="position: relative; overflow: hidden; cursor: pointer;" title="Click to change month/year">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="pointer-events: none;">
+                                    <rect x="3" y="4" width="18" height="18" rx="2"/>
+                                    <line x1="16" y1="2" x2="16" y2="6"/>
+                                    <line x1="8" y1="2" x2="8" y2="6"/>
+                                    <line x1="3" y1="10" x2="21" y2="10"/>
+                                </svg>
+                                <span id="current-month-year" style="pointer-events: none;">January 2023</span>
+                                <input type="month" id="cal-native-month-picker" aria-label="Select Month and Year" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.01; cursor: pointer; z-index: 10;">
+                            </div>
+                            <button class="btn-icon" id="cal-next" aria-label="Next month">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" aria-hidden="true">
+                                    <polyline points="9 18 15 12 9 6"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="toolbar-controls">
+                            <button class="btn-outline" id="cal-today">Today</button>
+                            <div class="select-wrapper">
+                                <select id="cal-month-select" aria-label="Jump to month">
+                                    <option value="0">January</option><option value="1">February</option>
+                                    <option value="2">March</option><option value="3">April</option>
+                                    <option value="4">May</option><option value="5">June</option>
+                                    <option value="6">July</option><option value="7">August</option>
+                                    <option value="8">September</option><option value="9">October</option>
+                                    <option value="10">November</option><option value="11">December</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="calendar-doctor-row">
+                        James Marry
+                    </div>
+
+                    <div class="calendar-grid-wrapper">
+                        <div class="calendar-scroll-area">
+                            <div class="calendar-days-header" role="row" aria-hidden="true">
+                                <div>SUN</div><div>MON</div><div>TUE</div>
+                                <div>WED</div><div>THU</div>
+                                <div class="text-blue">FRI</div><div>SAT</div>
+                            </div>
+                            <div class="calendar-grid" id="calendar-grid" role="grid"
+                                aria-label="Monthly calendar"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="dashboard-view" class="view-section" aria-label="Dashboard view">
+                <div class="dashboard-header">
+                    <h2 class="page-title">Practice Dashboard</h2>
+                    <span class="appt-badge" id="appt-badge" aria-live="polite"></span>
+                </div>
+
+                <div class="filter-bar" role="search" aria-label="Filter appointments">
+                    <div class="filter-row">
+                        <div class="input-with-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                aria-hidden="true">
+                                <circle cx="11" cy="11" r="8"/>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                            </svg>
+                            <input type="text" id="search-patient" placeholder="Patient Search"
+                                aria-label="Search by patient name" autocomplete="off">
+                        </div>
+                        <div class="input-with-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                aria-hidden="true">
+                                <circle cx="11" cy="11" r="8"/>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                            </svg>
+                            <input type="text" id="search-doctor" placeholder="Doctor Search"
+                                aria-label="Search by doctor name" autocomplete="off">
+                        </div>
+                        <div class="date-range">
+                            <div class="input-with-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <rect x="3" y="4" width="18" height="18" rx="2"/>
+                                    <line x1="16" y1="2" x2="16" y2="6"/>
+                                    <line x1="8" y1="2" x2="8" y2="6"/>
+                                    <line x1="3" y1="10" x2="21" y2="10"/>
+                                </svg>
+                                <input type="date" id="filter-start" aria-label="Start date" data-placeholder="Start Date" required>
+                            </div>
+                            <span class="dash" aria-hidden="true">—</span>
+                            <div class="input-with-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <rect x="3" y="4" width="18" height="18" rx="2"/>
+                                    <line x1="16" y1="2" x2="16" y2="6"/>
+                                    <line x1="8" y1="2" x2="8" y2="6"/>
+                                    <line x1="3" y1="10" x2="21" y2="10"/>
+                                </svg>
+                                <input type="date" id="filter-end" aria-label="End date" data-placeholder="End Date" required>
+                            </div>
+                        </div>
+                        <button class="btn-primary" id="btn-update-filters" aria-label="Update filters">
+                            Update
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-card">
+                    <div class="table-card-header">
+                        <span class="table-title">Appointment Details</span>
+                        <span class="result-count" id="result-count" aria-live="polite"></span>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="data-table" aria-label="Appointments">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Patient</th>
+                                    <th scope="col">Doctor</th>
+                                    <th scope="col">Hospital</th>
+                                    <th scope="col">Specialty</th>
+                                    <th scope="col">Select Date</th>
+                                    <th scope="col">Select Time</th>
+                                    <th scope="col" class="col-actions">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dashboard-tbody"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="mobile-cards" id="mobile-cards" aria-label="Appointments list"></div>
+
+                    <div class="empty-state" id="dashboard-empty" hidden>
+                        <div class="empty-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <rect x="3" y="4" width="18" height="18" rx="2"/>
+                                <line x1="16" y1="2" x2="16" y2="6"/>
+                                <line x1="8" y1="2" x2="8" y2="6"/>
+                                <line x1="3" y1="10" x2="21" y2="10"/>
+                                <line x1="9" y1="15" x2="9" y2="15" stroke-linecap="round" stroke-width="2.5"/>
+                                <line x1="13" y1="15" x2="17" y2="15" stroke-linecap="round"/>
+                                <line x1="9" y1="19" x2="9" y2="19" stroke-linecap="round" stroke-width="2.5"/>
+                                <line x1="13" y1="19" x2="17" y2="19" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <p class="empty-title">No appointments found</p>
+                        <p class="empty-sub">Adjust your filters or book a new appointment</p>
+                        <button class="btn-primary btn-sm" id="empty-book-btn">+ Book Appointment</button>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <div class="modal-overlay" id="appointment-modal" role="dialog" aria-modal="true"
+        aria-labelledby="modal-title">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="modal-title-wrap">
+                    <div class="modal-title-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2"/>
+                            <line x1="16" y1="2" x2="16" y2="6"/>
+                            <line x1="8" y1="2" x2="8" y2="6"/>
+                            <line x1="3" y1="10" x2="21" y2="10"/>
+                        </svg>
+                    </div>
+                    <h3 id="modal-title">Schedule Appointment</h3>
+                </div>
+                <button class="btn-close" id="btn-close-modal" aria-label="Close">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        aria-hidden="true">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <form id="appointment-form" novalidate>
+                    <input type="hidden" id="appt-id">
+
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label for="appt-patient">Patient Name <span class="req">*</span></label>
+                            <div class="input-group">
+                                <svg class="input-icon" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="9" cy="7" r="4"/>
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                </svg>
+                                <input type="text" id="appt-patient" list="patient-list"
+                                    placeholder="Enter patient name"
+                                    aria-required="true" aria-describedby="err-patient" autocomplete="off">
+                                <datalist id="patient-list">
+                                    <option value="Henry James">
+                                    <option value="Jane Doe">
+                                    <option value="John Smith">
+                                    <option value="Mary Johnson">
+                                    <option value="Robert Brown">
+                                </datalist>
+                            </div>
+                            <span class="field-error" id="err-patient" role="alert"></span>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="appt-doctor">Doctor <span class="req">*</span></label>
+                            <div class="input-group">
+                                <svg class="input-icon" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="9" cy="7" r="4"/>
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                </svg>
+                                <select id="appt-doctor" aria-required="true"
+                                    aria-describedby="err-doctor">
+                                    <option value="" disabled selected>Select doctor</option>
+                                    <option value="James Marry">James Marry</option>
+                                    <option value="Sarah Smith">Sarah Smith</option>
+                                    <option value="David Lee">David Lee</option>
+                                </select>
+                            </div>
+                            <span class="field-error" id="err-doctor" role="alert"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label for="appt-hospital">Hospital <span class="req">*</span></label>
+                            <div class="input-group">
+                                <svg class="input-icon" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                                    <circle cx="12" cy="10" r="3"/>
+                                </svg>
+                                <select id="appt-hospital" aria-required="true"
+                                    aria-describedby="err-hospital">
+                                    <option value="" disabled selected>Select hospital</option>
+                                    <option value="Salus Center (General Hospital)">Salus Center</option>
+                                    <option value="Ultracare (General Hospital)">Ultracare</option>
+                                    <option value="City Medical Center">City Medical Center</option>
+                                </select>
+                            </div>
+                            <span class="field-error" id="err-hospital" role="alert"></span>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="appt-specialty">Specialty <span class="req">*</span></label>
+                            <div class="input-group">
+                                <svg class="input-icon" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                                </svg>
+                                <select id="appt-specialty" aria-required="true"
+                                    aria-describedby="err-specialty">
+                                    <option value="" disabled selected>Select specialty</option>
+                                    <option value="Dermatology">Dermatology</option>
+                                    <option value="Neurology">Neurology</option>
+                                    <option value="Cardiology">Cardiology</option>
+                                    <option value="Orthopedics">Orthopedics</option>
+                                    <option value="Pediatrics">Pediatrics</option>
+                                </select>
+                            </div>
+                            <span class="field-error" id="err-specialty" role="alert"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label for="appt-date">Date <span class="req">*</span></label>
+                            <div class="input-group">
+                                <svg class="input-icon" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <rect x="3" y="4" width="18" height="18" rx="2"/>
+                                    <line x1="16" y1="2" x2="16" y2="6"/>
+                                    <line x1="8" y1="2" x2="8" y2="6"/>
+                                    <line x1="3" y1="10" x2="21" y2="10"/>
+                                </svg>
+                                <input type="date" id="appt-date" aria-required="true"
+                                    aria-describedby="err-date">
+                            </div>
+                            <span class="field-error" id="err-date" role="alert"></span>
+                        </div>
+
+                        <div class="form-field">
+                            <label for="appt-time">Time <span class="req">*</span></label>
+                            <div class="input-group">
+                                <svg class="input-icon" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <polyline points="12 6 12 12 16 14"/>
+                                </svg>
+                                <input type="time" id="appt-time" aria-required="true"
+                                    aria-describedby="err-time">
+                            </div>
+                            <span class="field-error" id="err-time" role="alert"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-field full">
+                        <label for="appt-reason">
+                            Reason <span class="optional">(optional)</span>
+                        </label>
+                        <textarea id="appt-reason" rows="3"
+                            placeholder="Describe the reason for visit..."></textarea>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn-cancel" id="btn-cancel-modal">Cancel</button>
+                <button type="button" class="btn-primary" id="btn-save-appt">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        aria-hidden="true">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                        <polyline points="17 21 17 13 7 13 7 21"/>
+                        <polyline points="7 3 7 8 15 8"/>
+                    </svg>
+                    Save Appointment
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
